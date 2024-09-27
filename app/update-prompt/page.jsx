@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from "react"; // This will allow us to use state in our component
-import { useRouter, useSearchParams } from "next/navigation"; // This will allow us to redirect the user
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Form from '@components/Form';
 
-import Form from '@components/Form'; 
-
-const EditPrompt = () => {
+// This component will use useSearchParams
+const EditPromptContent = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
     const promptId = searchParams.get('id');
@@ -18,7 +18,7 @@ const EditPrompt = () => {
 
     useEffect(() => {
         const getPromptDetails = async () => {
-            const response = await fetch (`/api/prompt/${promptId}`);
+            const response = await fetch(`/api/prompt/${promptId}`);
             const data = await response.json();
 
             setPost({
@@ -31,43 +31,48 @@ const EditPrompt = () => {
     }, [promptId])
 
     const updatePrompt = async (e) => {
-        e.preventDefault(); // This will prevent the default form submission behavior
-        setSubmitting(true); 
+        e.preventDefault();
+        setSubmitting(true);
 
         if(!promptId) return alert('Prompt ID is missing');
 
         try {
-            const response = await fetch(`/api/prompt/${promptId}`,
-        {
-            method: 'PATCH',
-            body: JSON.stringify({
-                prompt: post.prompt,
-                tag: post.tag
+            const response = await fetch(`/api/prompt/${promptId}`, {
+                method: 'PATCH',
+                body: JSON.stringify({
+                    prompt: post.prompt,
+                    tag: post.tag
+                })
             })
-        })
 
-        if (response.ok) {
-            router.push('/'); // This will redirect the user to the home page
-        }
-
+            if (response.ok) {
+                router.push('/');
+            }
         } catch (error) {
             console.log(error);
-        } finally { // This will run regardless of the try/catch block
+        } finally {
             setSubmitting(false);
         }
-
     }
 
-
     return (
-    <Form
-        type="Edit"
-        post={post}
-        setPost={setPost}
-        submitting={submitting}
-        handleSubmit={updatePrompt}
-    />
-  )
+        <Form
+            type="Edit"
+            post={post}
+            setPost={setPost}
+            submitting={submitting}
+            handleSubmit={updatePrompt}
+        />
+    )
 }
 
-export default EditPrompt
+// This is the main component that will be exported
+const EditPrompt = () => {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <EditPromptContent />
+        </Suspense>
+    )
+}
+
+export default EditPrompt;
