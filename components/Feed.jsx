@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import PromptCard from './PromptCard';
 
@@ -40,23 +40,32 @@ const Feed = () => {
     setSearchText(e.target.value);
   }
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      setLoading(true); // Set loading to true while fetching
-      try {
-        const response = await fetch('/api/prompt');
-        const data = await response.json();
-        setPosts(data);
-        setFilteredPosts(data);
-      } catch (error) {
-        console.error('Error fetching posts:', error);
-      } finally {
-        setLoading(false); // Set loading to false after fetching
+  const fetchPosts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/prompt?t=${new Date().getTime()}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+      const data = await response.json();
+      console.log('Fetched posts:', data.length);
+      setPosts(data);
+      setFilteredPosts(data);
+      setError(null);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+      setError('Failed to fetch posts. Please try again later.');
+    } finally {
+      setLoading(false);
     }
-
-    fetchPosts();
   }, []);
+
+  useEffect(() => {
+    fetchPosts();
+    // Set up polling every 30 seconds
+    const intervalId = setInterval(fetchPosts, 30000);
+    return () => clearInterval(intervalId);
+  }, [fetchPosts]);
 
   useEffect(() => {
     const filterPosts = () => {
