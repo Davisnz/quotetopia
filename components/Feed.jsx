@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import PromptCard from './PromptCard';
+import useSWR from 'swr';
+
+const fetcher = (...args) => fetch(...args).then(res => res.json());
 
 const PromptCardList = ({ data, handleTagClick }) => {
   return (
@@ -18,57 +21,34 @@ const PromptCardList = ({ data, handleTagClick }) => {
   )
 }
 
-  export function SkeletonCards() {
-    return (
-      <div className="flex items-center space-x-4 border-[1px] border-gray-200 p-6 rounded-lg shadow-sm">
-        <Skeleton className="h-12 w-12 rounded-full" />
-        <div className="space-y-2 flex-col">
-          <Skeleton className="h-4 w-[150px]" />
-          <Skeleton className="h-4 w-[250px]" />
-        </div>
+export function SkeletonCards() {
+  return (
+    <div className="flex items-center space-x-4 border-[1px] border-gray-200 p-6 rounded-lg shadow-sm">
+      <Skeleton className="h-12 w-12 rounded-full" />
+      <div className="space-y-2 flex-col">
+        <Skeleton className="h-4 w-[150px]" />
+        <Skeleton className="h-4 w-[250px]" />
       </div>
-    )
-  }
+    </div>
+  )
+}
 
 const Feed = () => {
   const [searchText, setSearchText] = useState('');
-  const [posts, setPosts] = useState([]);
   const [filteredPosts, setFilteredPosts] = useState([]);
-  const [loading, setLoading] = useState(true); // Add loading state
+
+  const { data: posts, error, isLoading } = useSWR('/api/prompt', fetcher, {
+    refreshInterval: 5000, // Refresh every 5 seconds
+    revalidateOnFocus: true,
+    dedupingInterval: 1000,
+  });
 
   const handleSearchChange = (e) => {
     setSearchText(e.target.value);
   }
 
-  const fetchPosts = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(`/api/prompt?t=${new Date().getTime()}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      console.log('Fetched posts:', data.length);
-      setPosts(data);
-      setFilteredPosts(data);
-      setError(null);
-    } catch (error) {
-      console.error('Error fetching posts:', error);
-      setError('Failed to fetch posts. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    fetchPosts();
-    // Set up polling every 30 seconds
-    const intervalId = setInterval(fetchPosts, 30000);
-    return () => clearInterval(intervalId);
-  }, [fetchPosts]);
-
-  useEffect(() => {
-    const filterPosts = () => {
+    if (posts) {
       const filtered = posts.filter(
         (post) =>
           post.tag.toLowerCase().includes(searchText.toLowerCase()) || 
@@ -76,9 +56,7 @@ const Feed = () => {
           post.prompt.toLowerCase().includes(searchText.toLowerCase())
       );
       setFilteredPosts(filtered);
-    };
-
-    filterPosts();
+    }
   }, [searchText, posts]);
 
   return (
@@ -94,24 +72,24 @@ const Feed = () => {
         />
       </form>
 
-      {loading ? (
-        // Render multiple SkelentonCards components to represent loading state
+      {isLoading ? (
         <div className="mt-16 prompt_layout">
           {[...Array(6)].map((_, index) => (
             <SkeletonCards key={index} />
           ))}
         </div>
+      ) : error ? (
+        <div className="mt-16 text-center text-red-500">Failed to load posts</div>
       ) : (
-
-      <PromptCardList 
-        data={filteredPosts}
-        handleTagClick={(tag) => {
-          setSearchText(tag);
-        }}
-      />
-    )}
+        <PromptCardList 
+          data={filteredPosts}
+          handleTagClick={(tag) => {
+            setSearchText(tag);
+          }}
+        />
+      )}
     </section>
   )
 }
 
-export default Feed
+export default Feed;
