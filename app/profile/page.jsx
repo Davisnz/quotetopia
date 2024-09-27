@@ -16,7 +16,7 @@ import {
 
 import { SkeletonCards } from '@components/Feed';
 
-import Profile from '@components/profile';
+import Profile from '@components/Profile';
 
 const MyProfile = () => {
   const router = useRouter();

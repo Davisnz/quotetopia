@@ -24,7 +24,7 @@ export const GET = async (request) => {
         // });
 
         // Step 3: Attempt to populate creator
-        const populatedPrompts = await Prompt.find({}).populate('creator');
+        const populatedPrompts = await Prompt.find({}).populate('creator'); 
 
         // Final response with populated prompts
         return new Response(JSON.stringify(populatedPrompts), { 
