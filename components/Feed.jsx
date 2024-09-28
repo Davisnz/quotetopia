@@ -48,14 +48,16 @@ const Feed = () => {
   }
 
   useEffect(() => {
-    if (posts) {
-      const filtered = posts.filter(
-        (post) =>
-          post.tag.toLowerCase().includes(searchText.toLowerCase()) || 
-          post.creator.username.toLowerCase().includes(searchText.toLowerCase()) ||
-          post.prompt.toLowerCase().includes(searchText.toLowerCase())
+    if (posts && Array.isArray(posts)) {
+      const filtered = posts.filter(post => 
+        post.tag?.toLowerCase().includes(searchText.toLowerCase()) || 
+        post.creator?.username?.toLowerCase().includes(searchText.toLowerCase()) ||
+        post.prompt?.toLowerCase().includes(searchText.toLowerCase())
       );
       setFilteredPosts(filtered);
+    } else {
+      console.error('Posts is not an array or is undefined:', posts);
+      setFilteredPosts([]);
     }
   }, [searchText, posts]);
 
