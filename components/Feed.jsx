@@ -24,8 +24,8 @@ const PromptCardList = ({ data, handleTagClick }) => {
 export function SkeletonCards() {
   return (
     <div className="flex items-center space-x-4 border-[1px] border-gray-200 p-6 rounded-lg shadow-sm">
-      <Skeleton className="h-12 w-12 rounded-full" />
-      <div className="space-y-2 flex-col">
+      <Skeleton className="w-12 h-12 rounded-full" />
+      <div className="flex-col space-y-2">
         <Skeleton className="h-4 w-[150px]" />
         <Skeleton className="h-4 w-[250px]" />
       </div>

@@ -7,7 +7,6 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 
 const PromptCard = ({ post, handleTagClick, handleEdit, handleDelete }) => {
-
   const { data: session } = useSession();
   const pathName = usePathname();
   const router = useRouter();
@@ -20,31 +19,41 @@ const PromptCard = ({ post, handleTagClick, handleEdit, handleDelete }) => {
     setTimeout(() => setCopied(""), 3000);
   }
 
+  // Default image in case post.creator.image is undefined
+  const defaultImage = '/assets/images/logo.svg'; // Replace with your default image path
+
   return (
     <div className="prompt_card">
-      <div className="flex justify-between items-start gap-5">
-        <div className="flex-1 flex justify-start items-center gap-3 cursor-pointer">
-          
-          <Link href={`/profile/${post.creator._id}`}>
-            <Image 
-              src={post.creator.image}
-              alt="user_image"
-              width={40}
-              height={40}
-              className="rounded-full object-contain"
-              />
-          </Link>
-                
+      <div className="flex gap-5 justify-between items-start">
+        <div className="flex flex-1 gap-3 justify-start items-center cursor-pointer">
+          <Image 
+            src={post.creator?.image || defaultImage}
+            alt="user_image"
+            width={40}
+            height={40}
+            className="object-contain rounded-full"
+          />
 
           <div className="flex flex-col">
-            <Link href={`/profile/${post.creator._id}`}>
-            <h3 className="font-satoshi font-semibold text-gray-900 capitalize">
-               {post.creator.username}
-            </h3>
-            <p className="font-inter text-sm text-gray-500">
-              {post.creator.email}
-            </p>
-          </Link>
+            {post.creator?._id ? (
+              <Link href={`/profile/${post.creator._id}`}>
+                <h3 className="font-semibold text-gray-900 capitalize font-satoshi">
+                  {post.creator?.username || 'Unknown User'}  
+                </h3>
+                <p className="text-sm text-gray-500 font-inter">
+                  {post.creator?.email || 'No email provided'}
+                </p>
+              </Link>
+            ) : (
+              <>
+                <h3 className="font-semibold text-gray-900 capitalize font-satoshi">
+                  Unknown User
+                </h3>
+                <p className="text-sm text-gray-500 font-inter">
+                  No email provided
+                </p>
+              </>
+            )}
           </div>
         </div>
 
@@ -56,16 +65,16 @@ const PromptCard = ({ post, handleTagClick, handleEdit, handleDelete }) => {
           />
         </div>
       </div>
-      <p className="my-4 font-satoshi text-sm text-gray-700">{post.prompt}</p>
-      <p className="font-inter lowercase text-sm blue_gradient cursor-pointer" onClick={() => handleTagClick && handleTagClick(post.tag)}>
+      <p className="my-4 text-sm text-gray-700 font-satoshi">{post.prompt}</p>
+      <p className="text-sm lowercase cursor-pointer font-inter blue_gradient" onClick={() => handleTagClick && handleTagClick(post.tag)}>
         #{post.tag}
       </p>
-      {session?.user.id === post.creator._id && pathName === '/profile' && (
-        <div className="mt-5 flex-center gap-4 border-t border-gray-100 pt-3">
-          <p className="font-inter text-sm text-green-600 cursor-pointer" onClick={handleEdit}>
+      {session?.user.id === post.creator?._id && pathName === '/profile' && (
+        <div className="gap-4 pt-3 mt-5 border-t border-gray-100 flex-center">
+          <p className="text-sm text-green-600 cursor-pointer font-inter" onClick={handleEdit}>
             Edit
           </p>
-          <p className="font-inter text-sm text-red-600 cursor-pointer" onClick={handleDelete}>
+          <p className="text-sm text-red-600 cursor-pointer font-inter" onClick={handleDelete}>
             Delete
           </p>
         </div>
