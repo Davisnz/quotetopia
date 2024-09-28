@@ -5,7 +5,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import PromptCard from './PromptCard';
 import useSWR from 'swr';
 
-const fetcher = (...args) => fetch(...args).then(res => res.json());
+const fetcher = async (...args) => {
+  const res = await fetch(...args);
+  if (!res.ok) {
+    throw new Error(`An error occurred while fetching the data. Status: ${res.status}`);
+  }
+  const data = await res.json();
+  if (!Array.isArray(data)) {
+    console.error('Fetched data is not an array:', data);
+    throw new Error('Fetched data is not in the expected format');
+  }
+  return data;
+};
 
 const PromptCardList = ({ data, handleTagClick }) => {
   return (
@@ -38,9 +49,12 @@ const Feed = () => {
   const [filteredPosts, setFilteredPosts] = useState([]);
 
   const { data: posts, error, isLoading } = useSWR('/api/prompt', fetcher, {
-    refreshInterval: 5000, // Refresh every 5 seconds
+    refreshInterval: 5000,
     revalidateOnFocus: true,
     dedupingInterval: 1000,
+    onError: (error) => {
+      console.error('SWR Error:', error);
+    }
   });
 
   const handleSearchChange = (e) => {
@@ -48,6 +62,7 @@ const Feed = () => {
   }
 
   useEffect(() => {
+    console.log('Posts data:', posts); // Log the posts data
     if (posts && Array.isArray(posts)) {
       const filtered = posts.filter(post => 
         post.tag?.toLowerCase().includes(searchText.toLowerCase()) || 
@@ -62,8 +77,7 @@ const Feed = () => {
   }, [searchText, posts]);
 
   return (
-    
-    <section className="feed">
+    <section className="feed" data-sentry-component="Feed" data-sentry-source-file="Feed.jsx">
       <form className="relative w-full flex-center">
         <input 
           type="text"
@@ -82,7 +96,13 @@ const Feed = () => {
           ))}
         </div>
       ) : error ? (
-        <div className="mt-16 text-center text-red-500">Failed to load posts</div>
+        <div className="mt-16 text-center text-red-500">
+          Failed to load posts: {error.message}
+        </div>
+      ) : !Array.isArray(posts) ? (
+        <div className="mt-16 text-center text-red-500">
+          Invalid data format received from server
+        </div>
       ) : (
         <PromptCardList 
           data={filteredPosts}
