@@ -83,4 +83,4 @@ const PromptCard = ({ post, handleTagClick, handleEdit, handleDelete }) => {
   )
 }
 
-export default PromptCard
+export default PromptCard 

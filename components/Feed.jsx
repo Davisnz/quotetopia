@@ -60,6 +60,7 @@ const Feed = () => {
   }, [searchText, posts]);
 
   return (
+    
     <section className="feed">
       <form className="relative w-full flex-center">
         <input 
